@@ -163,9 +163,17 @@ export async function createGlobe(options: GlobeOptions): Promise<Globe> {
   const land = new THREE.Group();
   world.add(land);
   try {
-    const response = await fetch(
-      new URL("../../land.geojson", import.meta.url).href,
-    ).catch(() => fetch("./land.geojson"));
+    // Resolve against the page, not against this bundle. A path relative to
+    // the module lands at the domain root, which is correct only when the
+    // site is served from the root and 404s on a project subpath. fetch
+    // resolves happily on a 404, so the old code degraded in silence.
+    const url = new URL(
+      `${import.meta.env.BASE_URL}land.geojson`,
+      document.baseURI,
+    ).href;
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Coastlines missing: ${url} returned ${response.status}`);
     const data = await response.json();
     const positions: number[] = [];
     for (const feature of data.features ?? []) {
@@ -192,8 +200,10 @@ export async function createGlobe(options: GlobeOptions): Promise<Globe> {
         new THREE.LineBasicMaterial({ color: 0x9ad08a }),
       ),
     );
-  } catch {
-    // A globe with no coastlines is still usable, so this is not fatal.
+  } catch (error) {
+    // A globe with no coastlines is still usable, so this does not stop the
+    // page, but it must not pass unnoticed either.
+    console.error("Could not draw the coastlines.", error);
   }
 
   const routeGroup = new THREE.Group();

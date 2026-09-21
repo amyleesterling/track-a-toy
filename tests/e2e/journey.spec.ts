@@ -19,7 +19,24 @@ async function open(page: Page): Promise<string[]> {
 }
 
 test("the globe draws and the first toy is loaded", async ({ page }) => {
+  const missing: string[] = [];
+  page.on("response", (r) => {
+    if (r.status() >= 400 && !r.url().endsWith("/favicon.ico"))
+      missing.push(`${r.status()} ${r.url()}`);
+  });
   const errors = await open(page);
+  // The coastline data used to 404 on a project subpath while the page still
+  // rendered, so nothing but a network check would have caught it.
+  expect(missing).toEqual([]);
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector("canvas") !== null &&
+        performance
+          .getEntriesByType("resource")
+          .some((r) => r.name.endsWith("land.geojson")),
+    ),
+  ).toBe(true);
   const state = await page.evaluate(() => ({
     toy: window.trackAToy!.toyId(),
     stage: window.trackAToy!.stageIndex(),
