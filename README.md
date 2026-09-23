@@ -1,9 +1,13 @@
 # Track a Toy
 
+**Play it here: https://amyleesterling.github.io/track-a-toy/**
+
 Pick a toy and follow it backwards across the world, all the way to the ground
 it came out of. Seven toys: wooden blocks, LEGO bricks, a birthday balloon,
 a plastic unicorn and dinosaur, Barbie, a die-cast monster truck, and a
 walkie talkie.
+
+Run it locally:
 
 ```bash
 npm install --legacy-peer-deps
